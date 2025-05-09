@@ -1,0 +1,9 @@
+## config.yaml
+training:
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 50
+  pose_clusters: 5
+  pose_subspace_dimension: 6
+  lmt_features_dimension: 1000
+  pca_reduced_dimension: 50
