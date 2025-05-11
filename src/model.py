@@ -88,8 +88,8 @@ class AppearanceAdaptiveModel:
         """
         flattened = image.flatten().astype(np.float32)
         centered = flattened - self.mean
-        projection = self.basis @ (self.basis.T @ centered)
-        return np.linalg.norm(centered - projection)
+        projection = self.basis @ (self.basis.T @ centered) + self.mean
+        return np.sum((flattened - projection) ** 2) / len(flattened)
     
 
 
@@ -166,11 +166,11 @@ class PoseSubspaceModel:
         Args:
             image (ndarray): Ảnh đầu vào (48x48, grayscale).
         Returns:
-            tuple: (pose_id, min_distance).
+            float: min distance
         """
         flattened = image.flatten()
         distances = [self.compute_distance(flattened, pose_id) for pose_id in range(self.n_poses)]
-        return np.argmin(distances), min(distances)
+        return min(distances)
     
 
 
@@ -223,7 +223,7 @@ class AlignmentConstraintModel:
         X = np.vstack([positive_images, negatives])
         y = np.array([1] * len(positive_images) + [0] * len(negatives))  # 1 = good, 0 = bad
         
-        return train_test_split(X, y, test_size=0.2, random_state=42)
+        return X, y
     
 
     
@@ -235,10 +235,10 @@ class AlignmentConstraintModel:
             positive_images: List ảnh positive (đã flatten).
         """
         
-        X_train, X_test, y_train, y_test = self.prepare_data(positive_images)
+        X_train, y_train = self.prepare_data(positive_images)
         
         self.svm.fit(X_train, y_train)
-        print(f"SVM Accuracy: {self.svm.score(X_test, y_test):.2f}")
+        
         
     
     def calculate_confidence(self, face_image: np.array) -> float:
@@ -250,8 +250,8 @@ class AlignmentConstraintModel:
         Returns:
             proba: Xác suất ảnh thuộc lớp "căn chỉnh tốt" [0, 1].
         """
-        proba = self.svm.predict_proba(face_image.flatten().reshape(1, -1))
-        return proba[0][1]  # P(class=1|image)
+        score = self.svm.decision_function(image.flatten().reshape(1, -1))
+        return score[0]  # Trả về khoảng cách trực tiếp
 
 class FaceRecognitionHMM:
     def __init__(self, pca_reduced_dim: int):
