@@ -15,7 +15,8 @@ data_loader = DatasetLoader(config)
 preprocessed_data = data_loader.load_data()
 
 # Step 2: Initialize Models
-pose_subspace_model = PoseSubspaceModel(config['training']['pose_clusters'], config['training']['pose_subspace_dimension'])
+pose_subspace_model = PoseSubspaceModel(config['training']['pose_clusters'], 
+                                        config['training']['pose_subspace_dimension'])
 alignment_model = AlignmentConstraintModel(config['training']['lmt_features_dimension'])
 recognition_model = FaceRecognitionHMM(config['training']['pca_reduced_dimension'])
 
